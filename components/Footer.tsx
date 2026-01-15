@@ -100,7 +100,7 @@ const Footer: React.FC = () => {
 
         {/* Copyright */}
         <div className="border-t border-white/5 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 uppercase tracking-widest">
-          <p>&copy; 2025 KEY ROLEPLAY CITY. All rights reserved.</p>
+          <p>&copy; 2026 KEY ROLEPLAY CITY. All rights reserved.</p>
           <p className="mt-2 md:mt-0">Designed By BDG Family</p>
         </div>
       </div>

@@ -21,7 +21,7 @@ export const newsData: NewsItem[] = [
     description:
       "Hệ thống nổ hũ bacarat casino chính thức ra mắt, mang đến trải nghiệm giải trí đỉnh cao cho cộng đồng FiveM Vietnam.",
     icon: Newspaper,
-    image: "luckyneko",
+    image: "/luckyneko",
     content: `
       <p class="mb-4 text-lg text-gray-300">Chào mừng các cư dân của thành phố FiveM Vietnam,</p>
       <p class="mb-6 text-gray-300">Ban quản trị xin trân trọng thông báo về sự ra mắt của hệ thống <strong>Gangwar và Chiếm Đóng (Turf War)</strong> phiên bản 2.0 trong bản cập nhật Season 5.0 này. Đây là nỗ lực của đội ngũ phát triển nhằm mang lại sân chơi kịch tính và công bằng hơn cho các tổ chức.</p>
