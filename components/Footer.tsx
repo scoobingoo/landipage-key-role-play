@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-6">
               <img
-                src="/logo.png"
+                src="logo.png"
                 alt="Logo"
                 className="w-10 h-10 rounded-lg object-cover transform group-hover:rotate-12 transition-transform"
               />

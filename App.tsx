@@ -6,6 +6,7 @@ import NewsGrid from './components/NewsGrid';
 import Footer from './components/Footer';
 import NewsDetail from './components/NewsDetail';
 import Webshop from './components/Webshop';
+import Rules from './components/Rules';
 import AdminPanel from './components/Admin/AdminPanel';
 import AuthModal from './components/Auth/AuthModal';
 import { newsData as initialNewsData } from './data/newsData';
@@ -19,22 +20,25 @@ export interface User {
   avatar?: string;
 }
 
-type View = 'home' | 'news-detail' | 'shop' | 'admin';
+type View = 'home' | 'news-detail' | 'shop' | 'admin' | 'rules';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedNewsId, setSelectedNewsId] = useState<number | null>(null);
+  
+  // activeRuleTab vẫn giữ để tương thích ngược nếu component Rules cần,
+  // nhưng logic chính sẽ dựa vào hash URL từ Navbar mới.
+  const [activeRuleTab, setActiveRuleTab] = useState<string>('general');
+  
   const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
-    // Khôi phục phiên đăng nhập
     const savedUser = localStorage.getItem('current_user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
 
-    // Khởi tạo dữ liệu mẫu nếu chưa có
     if (!localStorage.getItem('news_data')) {
       localStorage.setItem('news_data', JSON.stringify(initialNewsData));
     }
@@ -48,14 +52,25 @@ const App: React.FC = () => {
     setCurrentView('news-detail');
   };
 
-  const handleNavigate = (view: View) => {
+  const handleNavigate = (view: View, extra?: string) => {
+    // Bảo vệ route Admin
     if (view === 'admin' && user?.role !== 'admin') {
       setIsAuthModalOpen(true);
       return;
     }
+    
+    // Xử lý tab luật nếu có (dành cho footer hoặc các link cũ)
+    if (view === 'rules' && extra) {
+      setActiveRuleTab(extra);
+    }
+
     setCurrentView(view);
     setSelectedNewsId(null);
-    window.scrollTo(0, 0);
+    
+    // Chỉ cuộn lên đầu trang nếu KHÔNG PHẢI là chuyển đến một mục luật cụ thể (có hash)
+    if (view !== 'rules' || !window.location.hash) {
+      window.scrollTo(0, 0);
+    }
   };
 
   const handleLogin = (userData: User) => {
@@ -86,6 +101,8 @@ const App: React.FC = () => {
         ) : null;
       case 'shop':
         return <Webshop />;
+      case 'rules':
+        return <Rules initialSection={activeRuleTab} />;
       case 'admin':
         return <AdminPanel user={user} onLogout={handleLogout} />;
       case 'home':
@@ -106,6 +123,8 @@ const App: React.FC = () => {
         onNavigateHome={() => handleNavigate('home')} 
         onNavigateShop={() => handleNavigate('shop')}
         onNavigateAdmin={() => handleNavigate('admin')}
+        // Navbar mới không truyền tham số tab, chỉ gọi hàm để chuyển View
+        onNavigateRules={() => handleNavigate('rules')}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         user={user}
         onLogout={handleLogout}
@@ -115,7 +134,11 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
       
-      <Footer />
+      <Footer 
+        onNavigateRules={() => handleNavigate('rules')} 
+        onNavigateShop={() => handleNavigate('shop')} 
+        onNavigateHome={() => handleNavigate('home')} 
+      />
 
       <AuthModal 
         isOpen={isAuthModalOpen} 

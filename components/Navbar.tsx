@@ -13,31 +13,37 @@ import {
   Volume2,
   VolumeX,
   Volume1,
+  BookOpen,
+  FileText,
 } from "lucide-react";
-import { User as UserType } from "../App"; // Import Type User từ App
+import { User as UserType } from "../App";
 
 interface NavbarProps {
   onNavigateHome: () => void;
   onNavigateShop: () => void;
   onNavigateAdmin: () => void;
-  onOpenAuth: () => void; // Hàm mở form đăng nhập
-  user: UserType | null;   // Dữ liệu người dùng
-  onLogout: () => void;    // Hàm đăng xuất
+  // QUAN TRỌNG: Hàm này nhận vào string (tên tab)
+  onNavigateRules: (tab?: string) => void; 
+  onOpenAuth: () => void;
+  user: UserType | null;
+  onLogout: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   onNavigateHome,
   onNavigateShop,
   onNavigateAdmin,
+  onNavigateRules,
   onOpenAuth,
   user,
   onLogout,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false); // State cho dropdown user
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [rulesMenuOpen, setRulesMenuOpen] = useState(false);
 
-  // --- LOGIC NHẠC & VOLUME (GIỮ NGUYÊN TỪ FILE CŨ) ---
+  // --- LOGIC NHẠC (Giữ nguyên) ---
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.4);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -56,9 +62,7 @@ const Navbar: React.FC<NavbarProps> = ({
         audioRef.current.pause();
       } else {
         audioRef.current.volume = volume;
-        audioRef.current
-          .play()
-          .catch((e) => console.log("Trình duyệt chặn autoplay:", e));
+        audioRef.current.play().catch((e) => console.log("Autoplay blocked", e));
       }
       setIsPlaying(!isPlaying);
     }
@@ -67,25 +71,29 @@ const Navbar: React.FC<NavbarProps> = ({
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
+    if (audioRef.current) audioRef.current.volume = newVolume;
   };
-  // ----------------------------------------------------
 
-  // --- LOGIC ĐIỀU HƯỚNG ---
+  // --- DATA LUẬT (ID PHẢI KHỚP VỚI FILE Rules.tsx) ---
+  const ruleLinks = [
+    { name: "Quy định chung", id: "general" },
+    { name: "Luật In-game (IC/OOC)", id: "roleplay" },
+    { name: "Quy tắc Discord", id: "discord" },
+    { name: "Luật Băng Đảng", id: "illegal" },
+    { name: "Chính sách Refund", id: "refund" },
+  ];
+
+  // --- XỬ LÝ CLICK LINK THƯỜNG ---
   const handleLinkClick = (href: string, e: React.MouseEvent) => {
     e.preventDefault();
     setMobileMenuOpen(false);
+    setRulesMenuOpen(false);
 
-    if (href === "shop") {
-      onNavigateShop();
-    } else if (href === "home") {
-      onNavigateHome();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (href === "admin") {
-      onNavigateAdmin();
-    } else if (href.startsWith("#")) {
+    if (href === "shop") onNavigateShop();
+    else if (href === "home") onNavigateHome();
+    else if (href === "admin") onNavigateAdmin();
+    else if (href.startsWith("#")) {
+      // Xử lý scroll cho tin tức / liên hệ
       onNavigateHome();
       setTimeout(() => {
         document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
@@ -93,11 +101,21 @@ const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  // --- XỬ LÝ CLICK LUẬT (QUAN TRỌNG NHẤT) ---
+  const handleRuleClick = (tabId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setRulesMenuOpen(false);
+    setMobileMenuOpen(false);
+    // Gọi hàm từ App.tsx truyền xuống, kèm theo ID của tab
+    onNavigateRules(tabId);
+  };
+
   const navLinks = [
     { name: "Trang chủ", icon: Home, href: "home" },
     { name: "Webshop", icon: ShoppingCart, href: "shop" },
+    // Luật Server xử lý riêng
     { name: "Tin tức", icon: Newspaper, href: "#news" },
-    { name: "Liên hệ", icon: Phone, href: "#" },
+    { name: "Liên hệ", icon: Phone, href: "#contact" },
   ];
 
   return (
@@ -105,42 +123,98 @@ const Navbar: React.FC<NavbarProps> = ({
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-black/90 backdrop-blur-md border-b border-white/10 py-3"
+            ? "bg-black/95 backdrop-blur-md border-b border-white/10 py-3"
             : "bg-transparent py-5"
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
-          {/* Logo - GIỮ NGUYÊN THƯƠNG HIỆU CŨ */}
+          {/* Logo */}
           <a
             href="#"
             onClick={(e) => handleLinkClick("home", e)}
             className="flex items-center gap-2 group"
           >
-            <img
-              src="/logo.png"
-              alt="Logo"
-              className="w-10 h-10 rounded-lg object-cover transform group-hover:rotate-12 transition-transform"
-            />
+             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center font-black text-2xl text-white transform group-hover:rotate-12 transition-transform shadow-[0_0_15px_rgba(255,87,34,0.3)]">K</div>
             <span className="font-extrabold text-xl md:text-2xl tracking-tighter uppercase italic">
-              KEY <span className="text-primary">ROLEPLAY</span> CITY
+              KEY <span className="text-primary">ROLEPLAY</span>
             </span>
           </a>
 
-          {/* Desktop Menu */}
+          {/* DESKTOP MENU */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+            {/* Trang chủ & Webshop */}
+            {navLinks.slice(0, 2).map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleLinkClick(link.href, e)}
-                className="flex items-center text-sm font-semibold text-gray-300 hover:text-primary transition-colors uppercase tracking-wide relative group"
+                className="text-sm font-bold text-gray-300 hover:text-white transition-all uppercase tracking-widest hover:-translate-y-0.5"
               >
                 {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
               </a>
             ))}
 
-            {/* PHẦN USER / LOGIN (MỚI) */}
+            {/* --- DROPDOWN LUẬT SERVER --- */}
+            <div
+              className="relative group py-2"
+              onMouseEnter={() => setRulesMenuOpen(true)}
+              onMouseLeave={() => setRulesMenuOpen(false)}
+            >
+              <button
+                className={`flex items-center gap-1 text-sm font-bold uppercase tracking-widest transition-all ${
+                  rulesMenuOpen ? "text-primary" : "text-gray-300 hover:text-white"
+                }`}
+                onClick={() => onNavigateRules('general')} // Click vào chữ "Luật Server" thì về trang luật chung
+              >
+                Luật Server
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-300 ${
+                    rulesMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Menu Con */}
+              <div
+                className={`absolute top-full left-1/2 -translate-x-1/2 pt-4 transition-all duration-300 ${
+                  rulesMenuOpen
+                    ? "opacity-100 visible translate-y-0"
+                    : "opacity-0 invisible translate-y-2"
+                }`}
+              >
+                <div className="w-64 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl">
+                  {ruleLinks.map((rule) => (
+                    <a
+                      key={rule.id}
+                      href={`#rules-${rule.id}`}
+                      onClick={(e) => handleRuleClick(rule.id, e)} // GỌI HÀM NÀY
+                      className="flex items-center gap-3 px-5 py-4 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all border-b border-white/5 last:border-0 group/item"
+                    >
+                      <FileText
+                        size={16}
+                        className="text-primary opacity-80 group-hover/item:opacity-100 group-hover/item:scale-110 transition-all"
+                      />
+                      <span className="font-medium">{rule.name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tin tức & Liên hệ */}
+            {navLinks.slice(2).map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => handleLinkClick(link.href, e)}
+                className="text-sm font-bold text-gray-300 hover:text-white transition-all uppercase tracking-widest hover:-translate-y-0.5"
+              >
+                {link.name}
+              </a>
+            ))}
+
+            {/* User Auth Section */}
             {user ? (
               <div className="relative">
                 <button
@@ -166,7 +240,6 @@ const Navbar: React.FC<NavbarProps> = ({
                   />
                 </button>
 
-                {/* User Dropdown Menu */}
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fade-in-up">
                     {user.role === "admin" && (
@@ -198,9 +271,9 @@ const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onOpenAuth}
-                className="bg-primary hover:bg-primaryHover text-white px-6 py-2.5 rounded font-black text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(255,87,34,0.3)] transition-all hover:-translate-y-0.5"
+                className="bg-primary hover:bg-primaryHover text-white px-8 py-3 rounded-md font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
               >
-                ĐĂNG NHẬP
+                Đăng nhập
               </button>
             )}
           </div>
@@ -209,115 +282,71 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white p-2 focus:outline-none"
+              className="text-white p-2"
             >
               {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
-        <div
-          className={`md:hidden fixed inset-0 bg-black/95 z-40 flex flex-col items-center justify-center space-y-8 transition-transform duration-300 ${
-            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-          style={{ top: "0", height: "100vh" }}
-        >
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="absolute top-6 right-6 text-white p-2"
-          >
-            <X size={32} />
-          </button>
-
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => handleLinkClick(link.href, e)}
-              className="text-2xl font-bold text-white hover:text-primary uppercase flex items-center gap-3"
+        {/* MOBILE MENU OVERLAY */}
+        {mobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 bg-black/98 z-40 flex flex-col items-center justify-center space-y-6 animate-fade-in px-6">
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-6 right-6 text-white"
             >
-              <link.icon size={24} className="text-primary" />
-              {link.name}
-            </a>
-          ))}
+              <X size={32} />
+            </button>
+            
+            <a href="home" onClick={(e) => handleLinkClick('home', e)} className="text-xl font-bold text-white uppercase tracking-widest">Trang chủ</a>
+            <a href="shop" onClick={(e) => handleLinkClick('shop', e)} className="text-xl font-bold text-white uppercase tracking-widest">Webshop</a>
+            
+            {/* Mobile Rules List */}
+            <div className="w-full text-center space-y-4 py-4 border-y border-white/10">
+               <p className="text-primary font-black uppercase tracking-tighter text-sm italic flex justify-center gap-2 items-center">
+                 <BookOpen size={16} /> Luật Server
+               </p>
+               <div className="grid grid-cols-1 gap-3">
+                  {ruleLinks.map(item => (
+                     <button 
+                        key={item.id} 
+                        onClick={(e) => handleRuleClick(item.id, e)} // GỌI HÀM NÀY
+                        className="text-gray-400 text-sm font-bold uppercase hover:text-white transition-colors"
+                     >
+                       {item.name}
+                     </button>
+                  ))}
+               </div>
+            </div>
 
-          {/* Mobile User Options */}
-          {user ? (
-            <div className="flex flex-col gap-4 items-center border-t border-white/10 pt-8 w-full">
-              <span className="text-gray-400 uppercase text-sm tracking-widest">
-                Xin chào, {user.username}
-              </span>
-              {user.role === "admin" && (
-                <button
-                  onClick={(e) => handleLinkClick("admin", e)}
-                  className="text-xl font-bold text-white hover:text-primary uppercase flex items-center gap-3"
-                >
-                  <Settings size={20} /> Quản trị
-                </button>
-              )}
+            <a href="#news" onClick={(e) => handleLinkClick('#news', e)} className="text-xl font-bold text-white uppercase tracking-widest">Tin tức</a>
+            
+            {!user && (
               <button
                 onClick={() => {
-                  onLogout();
                   setMobileMenuOpen(false);
+                  onOpenAuth();
                 }}
-                className="text-xl font-bold text-red-500 hover:text-red-400 uppercase flex items-center gap-3"
+                className="bg-primary text-white px-10 py-4 rounded font-black uppercase shadow-xl shadow-primary/20 mt-4"
               >
-                <LogOut size={20} /> Đăng xuất
+                Đăng nhập
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => {
-                onOpenAuth();
-                setMobileMenuOpen(false);
-              }}
-              className="text-2xl font-bold text-primary hover:text-white uppercase flex items-center gap-3 mt-4"
-            >
-              <User size={24} /> Đăng nhập
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </nav>
 
-      {/* --- PHẦN NHẠC NỀN & VOLUME CONTROL (GIỮ NGUYÊN) --- */}
+      {/* Audio Player (Giữ nguyên) */}
       <audio ref={audioRef} loop>
-        <source src="/keyroleplay_music.mp3" type="audio/mpeg" />
+        <source src="keyroleplay_music.mp3" type="audio/mpeg" />
       </audio>
-
       <div className="fixed bottom-6 left-6 z-[60] flex items-center gap-3 group">
-        <button
-          onClick={toggleMusic}
-          className={`flex items-center justify-center w-12 h-12 rounded-full border border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 ${
-            isPlaying
-              ? "bg-primary text-white hover:scale-110"
-              : "bg-black/60 text-gray-400 hover:text-white"
-          }`}
-        >
-          {isPlaying ? (
-            volume > 0.5 ? (
-              <Volume2 size={24} className="animate-pulse" />
-            ) : (
-              <Volume1 size={24} className="animate-pulse" />
-            )
-          ) : (
-            <VolumeX size={24} />
-          )}
+        <button onClick={toggleMusic} className={`flex items-center justify-center w-12 h-12 rounded-full border border-white/20 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-300 ${isPlaying ? "bg-primary text-white hover:scale-110" : "bg-black/60 text-gray-400 hover:text-white"}`}>
+          {isPlaying ? (volume > 0.5 ? <Volume2 size={24} className="animate-pulse" /> : <Volume1 size={24} className="animate-pulse" />) : <VolumeX size={24} />}
         </button>
-
         <div className="bg-black/80 backdrop-blur rounded-full px-4 py-2 border border-white/10 opacity-0 -translate-x-4 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-x-0 transition-all duration-500 ease-out flex items-center shadow-xl">
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-24 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primaryHover"
-          />
-          <span className="ml-2 text-xs font-bold text-white w-8">
-            {Math.round(volume * 100)}%
-          </span>
+          <input type="range" min="0" max="1" step="0.05" value={volume} onChange={handleVolumeChange} className="w-24 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-primary" />
         </div>
       </div>
     </>
