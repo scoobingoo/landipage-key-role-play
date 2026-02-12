@@ -21,8 +21,8 @@ interface NavbarProps {
   onNavigateShop: () => void;
   onNavigateAdmin: () => void;
   onOpenAuth: () => void; // Hàm mở form đăng nhập
-  user: UserType | null;   // Dữ liệu người dùng
-  onLogout: () => void;    // Hàm đăng xuất
+  user: UserType | null; // Dữ liệu người dùng
+  onLogout: () => void; // Hàm đăng xuất
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -122,7 +122,7 @@ const Navbar: React.FC<NavbarProps> = ({
               className="w-10 h-10 rounded-lg object-cover transform group-hover:rotate-12 transition-transform"
             />
             <span className="font-extrabold text-xl md:text-2xl tracking-tighter uppercase italic">
-              KEY <span className="text-primary">ROLEPLAY</span> CITY
+              KEY <span className="text-primary">ROLEPLAY</span>
             </span>
           </a>
 
